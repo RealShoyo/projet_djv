@@ -8,15 +8,34 @@ public class NPC : MonoBehaviour
     [SerializeField] private List<Transform> taskLocations;
     [SerializeField] private float waitTimeAtTask = 5f;
 
+    public bool isImpostor = false;
     public bool isKilled = false;
+    [SerializeField] private float killRange = 5f;
+    private float detectionRange = 10f; //à mettre à jour si la taille de la vision du joueur change
+    [SerializeField] private float chaseSpeed = 15f;
+    [SerializeField] private float normalSpeed = 10f;
+
+    private float killCooldownTimer = 15f; 
+    private float nextKillDelay = 30f;    
+    private NPC targetVictim;
 
     private NavMeshAgent agent;
+    private Transform playerTransform;
+    private Light playerLight;
     private int currentTaskIndex;
     private bool isDeadHandled = false;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
+        normalSpeed = agent.speed;
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null)
+        {
+            playerTransform = player.transform;
+            playerLight = player.GetComponentInChildren<Light>();
+        }
 
         agent.updateRotation = true;
 
@@ -32,23 +51,129 @@ public class NPC : MonoBehaviour
 
     void Update()
     {
+        // pour checker la distribution des impostors
+        if (isImpostor)
+        {
+            Transform cubeLunettes = transform.GetChild(1);
+            Renderer cubeRenderer = cubeLunettes.GetComponent<Renderer>();
+            if (cubeRenderer != null)
+            {
+                cubeRenderer.material.color = Color.red;
+            }
+        }
+
         if (isKilled)
         {
             HandleDeath();
             return; 
         }
 
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-        {
+        if (killCooldownTimer > 0) killCooldownTimer -= Time.deltaTime;
 
-            if (!IsInvoking("GoToRandomTask"))
+        if (isImpostor)
+        {
+            HandleImpostorAI();
+        }
+        else
+        {
+            HandleCrewmateAI();
+        }
+    }
+
+    void HandleImpostorAI()
+    {
+        float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+
+        
+        if (distToPlayer <= detectionRange)
+        {
+            targetVictim = null; 
+            agent.speed = normalSpeed;
+            HandleCrewmateAI();
+            return;
+        }
+
+       
+        if (killCooldownTimer <= 0)
+        {
+            FindOrChaseVictim();
+        }
+        else
+        {
+            
+            HandleCrewmateAI();
+        }
+    }
+
+    void FindOrChaseVictim()
+    {
+       
+        if (targetVictim == null || targetVictim.isKilled)
+        {
+            targetVictim = FindClosestVulnerableNPC();
+        }
+
+        if (targetVictim != null)
+        {
+           
+            agent.speed = chaseSpeed;
+            agent.SetDestination(targetVictim.transform.position);
+
+            
+            float distToVictim = Vector3.Distance(transform.position, targetVictim.transform.position);
+            if (distToVictim <= killRange)
             {
-               
-                Invoke("GoToRandomTask", waitTimeAtTask);
+                
+                float distToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+                if (distToPlayer > detectionRange)
+                {
+                    ExecuteKill(targetVictim);
+                }
             }
         }
     }
 
+    NPC FindClosestVulnerableNPC()
+    {
+        NPC[] allNPCs = FindObjectsOfType<NPC>();
+        NPC closest = null;
+        float minDist = Mathf.Infinity;
+
+        foreach (NPC npc in allNPCs)
+        {
+            if (npc == this || npc.isImpostor || npc.isKilled) continue;
+
+            float d = Vector3.Distance(transform.position, npc.transform.position);
+            if (d < minDist)
+            {
+                minDist = d;
+                closest = npc;
+            }
+        }
+        return closest;
+    }
+
+    void ExecuteKill(NPC victim)
+    {
+        victim.isKilled = true;
+        killCooldownTimer = nextKillDelay; 
+        targetVictim = null;
+        agent.speed = normalSpeed;
+
+        Debug.Log("<color=red>CRIME : </color>" + name + " a éliminé " + victim.name);
+
+        
+        GoToRandomTask();
+    }
+
+    void HandleCrewmateAI()
+    {
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+        {
+            if (!IsInvoking("GoToRandomTask"))
+                Invoke("GoToRandomTask", waitTimeAtTask);
+        }
+    }
     void HandleDeath()
     {
         if (!isDeadHandled)
@@ -92,4 +217,5 @@ public class NPC : MonoBehaviour
         
         agent.SetDestination(taskLocations[currentTaskIndex].position);
     }
+
 }
