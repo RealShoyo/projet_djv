@@ -13,40 +13,35 @@ public class MeetingUIController : MonoBehaviour
 
     public void SetupMeetingButtons()
     {
-        foreach (Transform child in gridParent)
-        {
-            Destroy(child.gameObject);
-        }
+
+        foreach (Transform child in gridParent) Destroy(child.gameObject);
 
         NPC[] allNPCs = FindObjectsOfType<NPC>();
 
         foreach (NPC npc in allNPCs)
         {
-
+     
             if (npc != null && !npc.isKilled)
             {
                 GameObject btnObj = Instantiate(buttonPrefab, gridParent);
                 btnObj.SetActive(true);
 
+         
                 TextMeshProUGUI btnText = btnObj.GetComponentInChildren<TextMeshProUGUI>();
                 if (btnText != null)
                 {
                     btnText.text = npc.name;
-                    if (npc.transform.childCount > 0)
-                    {
-                        Renderer npcRenderer = npc.transform.GetChild(0).GetComponent<Renderer>();
-                        if (npcRenderer != null) btnText.color = npcRenderer.material.color;
-                    }
+ 
+                    Renderer rend = npc.GetComponentInChildren<Renderer>();
+                    if (rend != null) btnText.color = rend.material.color;
                 }
 
                 Button btn = btnObj.GetComponent<Button>();
-
-
-                GameObject npcToEject = npc.gameObject;
-
                 btn.onClick.RemoveAllListeners();
-                btn.onClick.AddListener(() => gameManager.EjectNPC(npcToEject));
 
+    
+                NPC capturedNPC = npc; 
+                btn.onClick.AddListener(delegate { gameManager.EjectNPC(capturedNPC); });
             }
         }
     }

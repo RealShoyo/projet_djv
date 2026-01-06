@@ -90,29 +90,21 @@ public class GameManager : MonoBehaviour
 
 
 
-    public void EjectNPC(GameObject npcObject) 
+    public void EjectNPC(NPC npcScript) 
     {
-        if (npcObject == null) return;
+        if (npcScript == null) return;
+        Debug.Log("<color=red>VOTE : </color> " + npcScript.name + " est éjecté !");
 
-    
-        NPC npcScript = npcObject.GetComponent<NPC>();
+        npcScript.isKilled = true;
 
-        if (npcScript != null)
+
+        Destroy(npcScript.gameObject);
+
+
+        MeetingManager meeting = FindObjectOfType<MeetingManager>();
+        if (meeting != null)
         {
-            Debug.Log("<color=yellow>ÉJECTION : </color>" + npcScript.name + " a été éjecté !");
-
-
-            npcScript.isKilled = true;
-
-  
-            Destroy(npcObject);
-
-   
-            MeetingManager meeting = FindObjectOfType<MeetingManager>();
-            if (meeting != null)
-            {
-                meeting.ResumeGame();
-            }
+            meeting.ResumeGame();
         }
     }
 

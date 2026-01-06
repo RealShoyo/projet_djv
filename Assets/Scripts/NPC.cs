@@ -51,16 +51,16 @@ public class NPC : MonoBehaviour
 
     void Update()
     {
-        // pour checker la distribution des impostors
-        if (isImpostor)
-        {
-            Transform cubeLunettes = transform.GetChild(1);
-            Renderer cubeRenderer = cubeLunettes.GetComponent<Renderer>();
-            if (cubeRenderer != null)
-            {
-                cubeRenderer.material.color = Color.red;
-            }
-        }
+        //// pour checker la distribution des impostors
+        //if (isImpostor)
+        //{
+        //    Transform cubeLunettes = transform.GetChild(1);
+        //    Renderer cubeRenderer = cubeLunettes.GetComponent<Renderer>();
+        //    if (cubeRenderer != null)
+        //    {
+        //        cubeRenderer.material.color = Color.red;
+        //    }
+        //}
 
         if (isKilled)
         {
