@@ -87,4 +87,42 @@ public class GameManager : MonoBehaviour
         npcList[index2].isImpostor = true;
         Debug.Log(npcList[index2].name + " est un Imposteur !");
     }
+
+
+
+    public void EjectNPC(GameObject npcObject) 
+    {
+        if (npcObject == null) return;
+
+    
+        NPC npcScript = npcObject.GetComponent<NPC>();
+
+        if (npcScript != null)
+        {
+            Debug.Log("<color=yellow>ÉJECTION : </color>" + npcScript.name + " a été éjecté !");
+
+
+            npcScript.isKilled = true;
+
+  
+            Destroy(npcObject);
+
+   
+            MeetingManager meeting = FindObjectOfType<MeetingManager>();
+            if (meeting != null)
+            {
+                meeting.ResumeGame();
+            }
+        }
+    }
+
+    public void SkipVote()
+    {
+        Debug.Log("Le vote a été passé (Skip). Personne n'a été éjecté.");
+        MeetingManager meeting = FindObjectOfType<MeetingManager>();
+        if (meeting != null)
+        {
+            meeting.ResumeGame();
+        }
+    }
 }

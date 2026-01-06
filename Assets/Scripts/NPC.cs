@@ -199,8 +199,16 @@ public class NPC : MonoBehaviour
         }
     }
 
-    void GoToRandomTask()
+    public void GoToRandomTask()
     {
+        NavMeshAgent agent = GetComponent<NavMeshAgent>();
+
+        // SÉCURITÉ : Si l'agent n'est pas actif, on ne fait rien
+        if (agent == null || !agent.enabled || !agent.isOnNavMesh)
+        {
+            return;
+        }
+
         if (taskLocations.Count == 0) return;
 
 
